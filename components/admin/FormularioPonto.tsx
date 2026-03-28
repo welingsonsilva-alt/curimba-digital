@@ -23,7 +23,7 @@ export default function FormularioPonto({ pontoInicial, onClose }: FormularioPon
   
   // 2. APLICANDO A INTERFACE NO STATE
   const [dados, setDados] = useState<DadosPonto>({
-    // Correção: usamos 'undefined' (termo técnico) e não 'indefinido'
+    // Correção: usamos 'undefined' (termo técnico)
     id: pontoInicial?.id && !pontoInicial?.criado_em ? pontoInicial.id : undefined,
     titulo: pontoInicial?.titulo || "",
     linha: pontoInicial?.linha || "",
