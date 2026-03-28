@@ -3,8 +3,9 @@
 import { useState } from "react";
 import { supabase } from "@/lib/supabase";
 
+// 1. DEFINIÇÃO DA INTERFACE (Isso resolve o erro da Vercel)
 interface DadosPonto {
-  id?: string | number;
+  id?: string | number; // O '?' permite que o ID seja opcional
   titulo: string;
   linha: string;
   letra: string;
@@ -15,16 +16,14 @@ interface DadosPonto {
 interface FormularioPontoProps {
   pontoInicial: any;
   onClose: () => void;
-  linhas?: any[]; // Opcional, caso queira passar a lista de linhas do banco
 }
 
 export default function FormularioPonto({ pontoInicial, onClose }: FormularioPontoProps) {
   const [loading, setLoading] = useState(false);
   
-  // CORREÇÃO DO ERRO DE TIPO: Definimos a interface DadosPonto para o State
+  // 2. APLICAÇÃO DO TIPO NO STATE
   const [dados, setDados] = useState<DadosPonto>({
-    // Se for ponto oficial (não tem criado_em), mantém o ID para dar UPDATE
-    // Se for sugestão (tem criado_em), id fica undefined para dar INSERT como novo
+    // Correção da lógica de ID e do termo 'undefined'
     id: pontoInicial?.id && !pontoInicial?.criado_em ? pontoInicial.id : undefined,
     titulo: pontoInicial?.titulo || "",
     linha: pontoInicial?.linha || "",
@@ -39,7 +38,7 @@ export default function FormularioPonto({ pontoInicial, onClose }: FormularioPon
 
     try {
       if (dados.id) {
-        // ATUALIZAR PONTO EXISTENTE
+        // ATUALIZAÇÃO (UPDATE)
         const { error } = await supabase
           .from("pontos")
           .update({
@@ -52,9 +51,8 @@ export default function FormularioPonto({ pontoInicial, onClose }: FormularioPon
           .eq("id", dados.id);
 
         if (error) throw error;
-        alert("Ponto atualizado com sucesso!");
       } else {
-        // INSERIR NOVO PONTO (Ou converter sugestão em oficial)
+        // INSERÇÃO (INSERT)
         const { error } = await supabase.from("pontos").insert([
           {
             titulo: dados.titulo,
@@ -68,13 +66,13 @@ export default function FormularioPonto({ pontoInicial, onClose }: FormularioPon
 
         if (error) throw error;
 
-        // Se viemos de uma sugestão, precisamos deletar ela da fila após salvar
+        // Se for uma sugestão sendo aprovada, removemos da fila de sugestões
         if (pontoInicial?.criado_em) {
           await supabase.from("sugestoes_pontos").delete().eq("id", pontoInicial.id);
         }
-
-        alert("Ponto salvo na biblioteca oficial!");
       }
+      
+      alert("Operação realizada com sucesso!");
       onClose();
     } catch (err: any) {
       alert("Erro ao salvar: " + err.message);
@@ -84,7 +82,7 @@ export default function FormularioPonto({ pontoInicial, onClose }: FormularioPon
   }
 
   return (
-    <div className="bg-slate-900 border border-slate-800 rounded-[48px] p-10 w-full max-w-4xl shadow-3xl animate-in zoom-in-95 duration-300">
+    <div className="bg-slate-900 border border-slate-800 rounded-[48px] p-10 w-full max-w-4xl shadow-3xl animate-in zoom-in-95 duration-300 overflow-y-auto max-h-[90vh]">
       <div className="flex justify-between items-center mb-10">
         <div className="flex items-center gap-4">
           <img src="/logo.png" className="w-12 h-12 object-contain" alt="Logo" />
@@ -98,56 +96,52 @@ export default function FormularioPonto({ pontoInicial, onClose }: FormularioPon
       <form onSubmit={salvarPonto} className="grid grid-cols-1 md:grid-cols-2 gap-6">
         <div className="space-y-6">
           <div className="flex flex-col gap-2">
-            <label className="text-[10px] font-black text-indigo-400 uppercase tracking-widest ml-4">Título do Ponto</label>
+            <label className="text-[10px] font-black text-indigo-400 uppercase tracking-widest ml-4">Título</label>
             <input
               required
               value={dados.titulo}
               onChange={(e) => setDados({ ...dados, titulo: e.target.value })}
-              placeholder="Ex: Deu um clarão no céu"
-              className="bg-slate-950 border border-slate-800 rounded-2xl px-6 py-4 outline-none focus:border-indigo-500 transition-all font-bold text-slate-200"
+              className="bg-slate-950 border border-slate-800 rounded-2xl px-6 py-4 outline-none focus:border-indigo-500 transition-all font-bold text-slate-200 w-full"
             />
           </div>
 
           <div className="flex flex-col gap-2">
-            <label className="text-[10px] font-black text-indigo-400 uppercase tracking-widest ml-4">Linha de Trabalho</label>
+            <label className="text-[10px] font-black text-indigo-400 uppercase tracking-widest ml-4">Linha</label>
             <input
               required
               value={dados.linha}
               onChange={(e) => setDados({ ...dados, linha: e.target.value })}
-              placeholder="Ex: Iansã"
-              className="bg-slate-950 border border-slate-800 rounded-2xl px-6 py-4 outline-none focus:border-indigo-500 transition-all font-bold text-slate-200"
+              className="bg-slate-950 border border-slate-800 rounded-2xl px-6 py-4 outline-none focus:border-indigo-500 transition-all font-bold text-slate-200 w-full"
             />
           </div>
 
           <div className="flex flex-col gap-2">
-            <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest ml-4">Link YouTube (Opcional)</label>
+            <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest ml-4">YouTube</label>
             <input
               value={dados.link_youtube}
               onChange={(e) => setDados({ ...dados, link_youtube: e.target.value })}
-              placeholder="https://youtube.com/..."
-              className="bg-slate-950/50 border border-slate-800 rounded-2xl px-6 py-4 outline-none focus:border-red-500/30 transition-all text-slate-400 text-sm"
+              className="bg-slate-950/50 border border-slate-800 rounded-2xl px-6 py-4 outline-none focus:border-red-500/30 transition-all text-slate-400 text-sm w-full"
             />
           </div>
 
           <div className="flex flex-col gap-2">
-            <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest ml-4">Link Spotify (Opcional)</label>
+            <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest ml-4">Spotify</label>
             <input
               value={dados.link_spotify}
               onChange={(e) => setDados({ ...dados, link_spotify: e.target.value })}
-              placeholder="https://open.spotify.com/..."
-              className="bg-slate-950/50 border border-slate-800 rounded-2xl px-6 py-4 outline-none focus:border-green-500/30 transition-all text-slate-400 text-sm"
+              className="bg-slate-950/50 border border-slate-800 rounded-2xl px-6 py-4 outline-none focus:border-green-500/30 transition-all text-slate-400 text-sm w-full"
             />
           </div>
         </div>
 
         <div className="flex flex-col gap-2">
-          <label className="text-[10px] font-black text-indigo-400 uppercase tracking-widest ml-4">Letra Completa</label>
+          <label className="text-[10px] font-black text-indigo-400 uppercase tracking-widest ml-4">Letra</label>
           <textarea
             required
-            rows={12}
+            rows={10}
             value={dados.letra}
             onChange={(e) => setDados({ ...dados, letra: e.target.value })}
-            className="bg-slate-950 border border-slate-800 rounded-[32px] p-8 outline-none focus:border-indigo-500 transition-all font-serif italic text-lg leading-relaxed text-slate-300 resize-none"
+            className="bg-slate-950 border border-slate-800 rounded-[32px] p-8 outline-none focus:border-indigo-500 transition-all font-serif italic text-lg leading-relaxed text-slate-300 resize-none h-full"
           />
         </div>
 
@@ -164,7 +158,7 @@ export default function FormularioPonto({ pontoInicial, onClose }: FormularioPon
             disabled={loading}
             className="bg-indigo-600 hover:bg-indigo-500 text-white px-12 py-4 rounded-2xl font-black text-[10px] tracking-widest uppercase transition-all shadow-xl shadow-indigo-600/20 disabled:opacity-50"
           >
-            {loading ? "SALVANDO..." : dados.id ? "ATUALIZAR REGISTRO" : "CONFIRMAR FUNDAMENTO"}
+            {loading ? "SALVANDO..." : "SALVAR NO CURIMBA DIGITAL"}
           </button>
         </div>
       </form>
