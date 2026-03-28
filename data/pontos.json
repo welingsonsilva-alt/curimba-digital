@@ -1,0 +1,23 @@
+[
+  {
+    "id": "1",
+    "titulo": "Pisar na Umbanda",
+    "linha": "Abertura",
+    "letra": "Pisei na Umbanda, a Umbanda balançou...\nMas não caiu, porque a Umbanda tem axé!",
+    "cor": "amber"
+  },
+  {
+    "id": "2",
+    "titulo": "Ogum Beira-Mar",
+    "linha": "Ogum",
+    "letra": "Ogum Beira-Mar, o que trouxe do mar?\nTrouxe a estrela da guia para nos iluminar.",
+    "cor": "red"
+  },
+  {
+    "id": "3",
+    "titulo": "Preto Velho de Angola",
+    "linha": "Pretos Velhos",
+    "letra": "Preto Velho de Angola, Preto Velho de Angola...\nVem trabalhar no terreiro agora.",
+    "cor": "slate"
+  }
+]
