@@ -1,6 +1,5 @@
 "use client";
-
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { supabase } from "@/lib/supabase";
 
 interface DadosPonto {
@@ -14,10 +13,10 @@ interface DadosPonto {
 
 export default function FormularioPonto({ pontoInicial, onClose }: { pontoInicial: any, onClose: () => void }) {
   const [loading, setLoading] = useState(false);
+  const [linhas, setLinhas] = useState<any[]>([]);
   
-  // Se tiver 'criado_em', tratamos como SUGESTÃO (id vira undefined para gerar um novo no oficial)
   const [dados, setDados] = useState<DadosPonto>({
-    id: pontoInicial?.id && !pontoInicial?.criado_em ? pontoInicial.id : undefined,
+    id: pontoInicial?.id && !pontoInicial?.created_at ? pontoInicial.id : undefined,
     titulo: pontoInicial?.titulo || "",
     linha: pontoInicial?.linha || "",
     letra: pontoInicial?.letra || "",
@@ -25,53 +24,69 @@ export default function FormularioPonto({ pontoInicial, onClose }: { pontoInicia
     link_spotify: pontoInicial?.link_spotify || "",
   });
 
+  useEffect(() => {
+    async function carregarLinhas() {
+      const { data } = await supabase.from("linhas_trabalho").select("*").order("nome");
+      if (data) setLinhas(data);
+    }
+    carregarLinhas();
+  }, []);
+
   async function salvarPonto(e: React.FormEvent) {
     e.preventDefault();
     setLoading(true);
-
     try {
       if (dados.id) {
-        // UPDATE em ponto já existente
-        const { error } = await supabase.from("pontos").update({
-          titulo: dados.titulo, linha: dados.linha, letra: dados.letra,
-          link_youtube: dados.link_youtube, link_spotify: dados.link_spotify
-        }).eq("id", dados.id);
-        if (error) throw error;
+        await supabase.from("pontos").update(dados).eq("id", dados.id);
       } else {
-        // INSERT de novo ponto (ou aprovação de sugestão)
-        const { error } = await supabase.from("pontos").insert([{
-          titulo: dados.titulo, linha: dados.linha, letra: dados.letra,
-          link_youtube: dados.link_youtube, link_spotify: dados.link_spotify, aprovado: true
-        }]);
+        const { error } = await supabase.from("pontos").insert([{ ...dados, aprovado: true }]);
         if (error) throw error;
-
-        // Se veio de uma sugestão, deleta ela da fila após salvar
-        if (pontoInicial?.criado_em) {
-          await supabase.from("sugestoes_pontos").delete().eq("id", pontoInicial.id);
+        // Se era sugestão, deleta da fila
+        if (pontoInicial?.id) {
+           await supabase.from("sugestoes_pontos").delete().eq("id", pontoInicial.id);
         }
       }
-      alert("Sucesso no Curimba Digital!");
+      alert("Ponto oficializado no Curimba Digital!");
       onClose();
-      window.location.reload(); // Atualiza a lista
+      window.location.reload();
     } catch (err: any) {
-      alert("Erro: " + err.message);
+      alert("Erro ao salvar: " + err.message);
     } finally {
       setLoading(false);
     }
   }
 
   return (
-    <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm">
-      <div className="bg-[#0B1120] border border-slate-800 rounded-[32px] p-8 w-full max-w-2xl shadow-2xl max-h-[90vh] overflow-y-auto">
-        <h2 className="text-xl font-black text-white uppercase italic mb-6">Configurar Ponto</h2>
-        <form onSubmit={salvarPonto} className="space-y-4">
-          <input required value={dados.titulo} onChange={e => setDados({...dados, titulo: e.target.value})} placeholder="Título" className="w-full bg-slate-950 border border-slate-800 p-4 rounded-xl text-white" />
-          <input required value={dados.linha} onChange={e => setDados({...dados, linha: e.target.value})} placeholder="Linha (Ex: Iansã)" className="w-full bg-slate-950 border border-slate-800 p-4 rounded-xl text-white" />
-          <textarea required rows={8} value={dados.letra} onChange={e => setDados({...dados, letra: e.target.value})} placeholder="Letra do ponto..." className="w-full bg-slate-950 border border-slate-800 p-4 rounded-xl text-white italic font-serif" />
-          <div className="flex gap-4">
+    <div className="fixed inset-0 z-[200] flex items-center justify-center p-4 bg-black/95 backdrop-blur-sm overflow-y-auto">
+      <div className="bg-[#0B1120] border border-white/10 rounded-[40px] p-8 w-full max-w-2xl shadow-3xl my-8">
+        <div className="flex justify-between items-center mb-8">
+          <h2 className="text-xl font-black text-white uppercase italic tracking-tighter">Configurar Fundamento</h2>
+          <button onClick={onClose} className="text-slate-500 hover:text-white">✕</button>
+        </div>
+        
+        <form onSubmit={salvarPonto} className="space-y-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div className="space-y-4">
+              <label className="text-[10px] font-black text-indigo-400 uppercase tracking-widest ml-2">Título do Ponto</label>
+              <input required value={dados.titulo} onChange={e => setDados({...dados, titulo: e.target.value})} className="w-full bg-slate-950 border border-white/5 p-4 rounded-2xl text-white outline-none focus:border-indigo-500" />
+              
+              <label className="text-[10px] font-black text-indigo-400 uppercase tracking-widest ml-2">Linha de Trabalho</label>
+              <select required value={dados.linha} onChange={e => setDados({...dados, linha: e.target.value})} className="w-full bg-slate-950 border border-white/5 p-4 rounded-2xl text-white outline-none appearance-none">
+                <option value="">Selecione...</option>
+                {linhas.map(l => <option key={l.id} value={l.nome}>{l.nome}</option>)}
+              </select>
+            </div>
+
+            <div className="space-y-4">
+              <label className="text-[10px] font-black text-indigo-400 uppercase tracking-widest ml-2">Letra Completa</label>
+              <textarea required rows={10} value={dados.letra} onChange={e => setDados({...dados, letra: e.target.value})} className="w-full bg-slate-950 border border-white/5 p-4 rounded-2xl text-white italic font-serif text-sm" />
+            </div>
+          </div>
+
+          <div className="flex gap-4 pt-6">
             <button type="button" onClick={onClose} className="flex-1 py-4 text-slate-500 font-bold uppercase text-[10px]">Cancelar</button>
-            <button type="submit" disabled={loading} className="flex-1 bg-indigo-600 py-4 rounded-xl text-white font-black uppercase text-[10px] tracking-widest">
-              {loading ? "SALVANDO..." : "CONFIRMAR PONTO"}
+            <button type="submit" disabled={loading} className="flex-1 bg-indigo-600 hover:bg-indigo-500 py-4 rounded-2xl text-white font-black uppercase text-[10px] tracking-widest transition-all">
+              {loading ? "PROCESSANDO..." : "SALVAR NO CURIMBA DIGITAL"}
             </button>
           </div>
         </form>
