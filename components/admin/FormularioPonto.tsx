@@ -3,9 +3,9 @@
 import { useState } from "react";
 import { supabase } from "@/lib/supabase";
 
-// 1. DEFINIÇÃO EXPLICITA DO TIPO (Isso resolve o erro da Vercel)
+// 1. DEFINIÇÃO DA INTERFACE (Isso resolve o erro da Vercel)
 interface DadosPonto {
-  id?: string | number; // O '?' diz que o ID é opcional
+  id?: string | number; // O '?' indica que o ID é opcional
   titulo: string;
   linha: string;
   letra: string;
@@ -23,7 +23,7 @@ export default function FormularioPonto({ pontoInicial, onClose }: FormularioPon
   
   // 2. APLICAÇÃO DO TIPO NO useState
   const [dados, setDados] = useState<DadosPonto>({
-    // Correção: usamos 'undefined' em inglês e garantimos que o TS reconheça o 'id'
+    // Correção da lógica de ID e do termo 'undefined'
     id: pontoInicial?.id && !pontoInicial?.criado_em ? pontoInicial.id : undefined,
     titulo: pontoInicial?.titulo || "",
     linha: pontoInicial?.linha || "",
@@ -38,7 +38,7 @@ export default function FormularioPonto({ pontoInicial, onClose }: FormularioPon
 
     try {
       if (dados.id) {
-        // ATUALIZAÇÃO (UPDATE)
+        // OPERAÇÃO DE ATUALIZAÇÃO (UPDATE)
         const { error } = await supabase
           .from("pontos")
           .update({
@@ -49,9 +49,10 @@ export default function FormularioPonto({ pontoInicial, onClose }: FormularioPon
             link_spotify: dados.link_spotify,
           })
           .eq("id", dados.id);
+
         if (error) throw error;
       } else {
-        // INSERÇÃO (INSERT)
+        // OPERAÇÃO DE INSERÇÃO (INSERT)
         const { error } = await supabase.from("pontos").insert([
           {
             titulo: dados.titulo,
@@ -62,9 +63,10 @@ export default function FormularioPonto({ pontoInicial, onClose }: FormularioPon
             aprovado: true,
           },
         ]);
+
         if (error) throw error;
 
-        // Se era uma sugestão, removemos da fila após salvar no oficial
+        // Se viemos de uma sugestão, removemos da fila de sugestões
         if (pontoInicial?.criado_em) {
           await supabase.from("sugestoes_pontos").delete().eq("id", pontoInicial.id);
         }
@@ -114,7 +116,7 @@ export default function FormularioPonto({ pontoInicial, onClose }: FormularioPon
           </div>
 
           <div className="flex flex-col gap-2 opacity-50">
-            <label className="text-[10px] font-black uppercase tracking-widest ml-4">YouTube (URL)</label>
+            <label className="text-[10px] font-black uppercase tracking-widest ml-4">YouTube Link</label>
             <input
               value={dados.link_youtube}
               onChange={(e) => setDados({ ...dados, link_youtube: e.target.value })}
@@ -123,7 +125,7 @@ export default function FormularioPonto({ pontoInicial, onClose }: FormularioPon
           </div>
 
           <div className="flex flex-col gap-2 opacity-50">
-            <label className="text-[10px] font-black uppercase tracking-widest ml-4">Spotify (URL)</label>
+            <label className="text-[10px] font-black uppercase tracking-widest ml-4">Spotify Link</label>
             <input
               value={dados.link_spotify}
               onChange={(e) => setDados({ ...dados, link_spotify: e.target.value })}
@@ -132,13 +134,13 @@ export default function FormularioPonto({ pontoInicial, onClose }: FormularioPon
           </div>
         </div>
 
-        <div className="flex flex-col gap-2 h-full">
+        <div className="flex flex-col gap-2 h-full min-h-[300px]">
           <label className="text-[10px] font-black text-indigo-400 uppercase tracking-widest ml-4">Letra</label>
           <textarea
             required
             value={dados.letra}
             onChange={(e) => setDados({ ...dados, letra: e.target.value })}
-            className="bg-slate-950 border border-slate-800 rounded-[32px] p-8 outline-none focus:border-indigo-500 transition-all font-serif italic text-lg leading-relaxed text-slate-300 resize-none flex-1 min-h-[300px]"
+            className="bg-slate-950 border border-slate-800 rounded-[32px] p-8 outline-none focus:border-indigo-500 transition-all font-serif italic text-lg leading-relaxed text-slate-300 resize-none h-full"
           />
         </div>
 
