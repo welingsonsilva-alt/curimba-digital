@@ -2,7 +2,7 @@
 import { useState } from "react";
 import { supabase } from "@/lib/supabase";
 
-export default function FormSugerir({ onClose, linhas }: any) {
+export default function FormSugerir({ onClose, linhas = [] }: any) {
   const [dados, setDados] = useState({ titulo: "", linha: "", letra: "", sugerido_por: "" });
   const [enviando, setEnviando] = useState(false);
 
@@ -44,7 +44,7 @@ export default function FormSugerir({ onClose, linhas }: any) {
           onChange={e => setDados({...dados, linha: e.target.value})}
         >
           <option value="">Selecione a Linha de Trabalho...</option>
-          {linhas.map((l: any) => (
+          {linhas?.map((l: any) => (
             <option key={l.id} value={l.nome} className="bg-slate-900">{l.nome}</option>
           ))}
         </select>
