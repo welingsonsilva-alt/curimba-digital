@@ -4,56 +4,113 @@ import { supabase } from "@/lib/supabase";
 
 export default function GerenciarLinhas() {
   const [linhas, setLinhas] = useState<any[]>([]);
-  const [nome, setNome] = useState("");
+  const [colunas, setColunas] = useState(["ORIXÁS", "EXU", "ENTIDADES"]);
+  const [novaLinha, setNovaLinha] = useState("");
+  const [loading, setLoading] = useState(true);
 
-  const carregar = async () => {
+  useEffect(() => {
+    carregarLinhas();
+  }, []);
+
+  async function carregarLinhas() {
     const { data } = await supabase.from("linhas_trabalho").select("*").order("nome");
     if (data) setLinhas(data);
+    setLoading(false);
+  }
+
+  // Lógica de Arrastar (Start)
+  const onDragStart = (e: React.DragEvent, id: string) => {
+    e.dataTransfer.setData("linhaId", id);
   };
 
-  useEffect(() => { carregar(); }, []);
+  // Lógica de Soltar (Drop)
+  const onDrop = async (e: React.DragEvent, novaCategoria: string) => {
+    const id = e.dataTransfer.getData("linhaId");
+    
+    // Atualiza visualmente primeiro (Otimismo)
+    const novasLinhas = linhas.map(l => l.id === id ? { ...l, categoria: novaCategoria } : l);
+    setLinhas(novasLinhas);
 
-  const add = async () => {
+    // Salva no Banco
+    const { error } = await supabase
+      .from("linhas_trabalho")
+      .update({ categoria: novaCategoria })
+      .eq("id", id);
+    
+    if (error) carregarLinhas(); // Se der erro, volta ao estado original
+  };
+
+  const permitirDrop = (e: React.DragEvent) => e.preventDefault();
+
+  async function adicionarLinha(categoria: string) {
+    const nome = prompt("Nome da nova Linha de Trabalho:");
     if (!nome) return;
-    await supabase.from("linhas_trabalho").insert([{ nome }]);
-    setNome("");
-    carregar();
-  };
+    const { error } = await supabase.from("linhas_trabalho").insert([{ 
+      nome: nome.toUpperCase(), 
+      categoria: categoria 
+    }]);
+    if (!error) carregarLinhas();
+  }
 
-  const del = async (id: string) => {
-    if (confirm("Deseja remover esta linha?")) {
-      await supabase.from("linhas_trabalho").delete().eq("id", id);
-      carregar();
-    }
-  };
+  function adicionarColuna() {
+    const nomeCol = prompt("Nome da nova Coluna:");
+    if (nomeCol) setColunas([...colunas, nomeCol.toUpperCase()]);
+  }
+
+  if (loading) return <div className="animate-pulse text-[10px] font-black uppercase text-slate-600 text-center py-20">Organizando Altar...</div>;
 
   return (
-    <div className="max-w-2xl animate-in fade-in slide-in-from-bottom-6 duration-700">
-      <div className="bg-slate-900/40 rounded-[50px] p-12 border border-slate-800/50 shadow-2xl">
-        <h2 className="text-3xl font-black text-white mb-2 tracking-tighter">Linhas de Trabalho</h2>
-        <p className="text-slate-500 text-sm mb-10 font-medium">Padronize as categorias do seu terreiro.</p>
-        
-        <div className="flex gap-4 mb-12 p-2 bg-slate-950/50 rounded-[30px] border border-slate-800 focus-within:border-indigo-500 transition-all">
-          <input 
-            value={nome} onChange={e => setNome(e.target.value)}
-            placeholder="Ex: Baianos, Boiadeiros..."
-            className="flex-1 p-4 bg-transparent outline-none font-bold text-slate-200 ml-4 placeholder:text-slate-700"
-          />
-          <button onClick={add} className="bg-indigo-600 text-white px-10 py-4 rounded-[22px] font-black text-xs hover:bg-indigo-500 shadow-xl shadow-indigo-900/20 transition-all active:scale-95">
-            CADASTRAR
-          </button>
-        </div>
+    <div className="space-y-8">
+      {/* HEADER DAS COLUNAS */}
+      <div className="flex justify-between items-center px-2">
+        <h3 className="text-[10px] font-black uppercase tracking-[0.3em] text-slate-500">Hierarquia de Trabalho</h3>
+        <button 
+          onClick={adicionarColuna}
+          className="bg-white/5 hover:bg-white/10 border border-white/10 px-4 py-2 rounded-xl text-[9px] font-black uppercase tracking-widest transition-all"
+        >
+          ＋ Nova Coluna
+        </button>
+      </div>
 
-        <div className="grid grid-cols-1 gap-3">
-          {linhas.map(l => (
-            <div key={l.id} className="flex justify-between items-center p-6 bg-slate-800/20 border border-slate-700/30 rounded-3xl hover:bg-slate-800/40 hover:border-slate-600 transition-all group">
-              <span className="font-bold text-slate-300 group-hover:text-white transition-colors">{l.nome}</span>
-              <button onClick={() => del(l.id)} className="text-slate-600 hover:text-red-400 font-bold text-xs opacity-0 group-hover:opacity-100 transition-all">
-                REMOVER
-              </button>
+      {/* ÁREA DE KANBAN */}
+      <div className="flex gap-4 overflow-x-auto pb-6 custom-scrollbar items-start">
+        {colunas.map((col) => (
+          <div 
+            key={col}
+            onDragOver={permitirDrop}
+            onDrop={(e) => onDrop(e, col)}
+            className="flex-shrink-0 w-72 bg-white/[0.02] border border-white/5 rounded-[32px] p-4 min-h-[400px] flex flex-col gap-3"
+          >
+            {/* Título da Coluna */}
+            <div className="flex justify-between items-center px-2 mb-2">
+              <span className="text-[10px] font-black text-indigo-500 tracking-widest">{col}</span>
+              <span className="text-[9px] font-bold text-slate-700">
+                {linhas.filter(l => l.categoria === col).length}
+              </span>
             </div>
-          ))}
-        </div>
+
+            {/* Cards da Coluna */}
+            {linhas.filter(l => l.categoria === col).map((l) => (
+              <div 
+                key={l.id}
+                draggable
+                onDragStart={(e) => onDragStart(e, l.id)}
+                className="bg-slate-900 border border-white/5 p-4 rounded-2xl cursor-grab active:cursor-grabbing hover:border-indigo-500/30 transition-all group flex justify-between items-center"
+              >
+                <span className="text-[10px] font-black uppercase tracking-tight text-slate-300">{l.nome}</span>
+                <span className="opacity-0 group-hover:opacity-40 text-[8px]">⠿</span>
+              </div>
+            ))}
+
+            {/* Botão de Adicionar na Coluna */}
+            <button 
+              onClick={() => adicionarLinha(col)}
+              className="mt-2 w-full py-3 rounded-xl border border-dashed border-white/5 text-[9px] font-black uppercase text-slate-600 hover:text-slate-400 hover:border-white/10 transition-all"
+            >
+              ＋ Adicionar em {col}
+            </button>
+          </div>
+        ))}
       </div>
     </div>
   );
