@@ -46,7 +46,7 @@ export default function Home() {
             <div className="flex justify-between items-center">
               <div className="flex items-center gap-6">
                 {/* LOGO AMPLIADA (w-20 em vez de w-12) */}
-                <img src="/logo.png" className="w-20 h-20 object-contain shadow-2xl" alt="Logo Orun" />
+                <img src="/logo.png" className="w-24 h-24 object-contain shadow-2xl" alt="Logo Orun" />
                 <div>
                   <h1 className="text-sm font-black uppercase tracking-[0.4em] text-indigo-500 mb-1">Curimba</h1>
                   <h2 className="text-3xl font-black uppercase italic tracking-tighter text-white leading-none">Digital</h2>
