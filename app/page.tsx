@@ -171,7 +171,7 @@ export default function Home() {
         <div className="fixed inset-0 z-[100] bg-black/95 backdrop-blur-md flex items-center justify-center p-4">
           <form onSubmit={enviarSugestao} className="bg-[#0B1120] border border-white/10 rounded-[2.5rem] w-full max-w-md p-8 shadow-3xl flex flex-col gap-5">
             <div className="flex justify-between items-center">
-              <h2 className="text-lg font-black uppercase italic text-white tracking-tighter">Colaborar</h2>
+              <h2 className="text-lg font-black uppercase italic text-white tracking-tighter">Indique um ponto</h2>
               <button type="button" onClick={() => setMostrarSugestao(false)} className="text-slate-500 text-2xl">✕</button>
             </div>
             
