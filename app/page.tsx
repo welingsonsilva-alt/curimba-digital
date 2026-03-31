@@ -80,7 +80,7 @@ export default function Home() {
          <div className="max-w-3xl mx-auto space-y-6">
             <div className="flex justify-between items-center">
               <div className="flex items-center gap-4">
-                <img src="/logo.png" className="w-12 h-12 object-contain" />
+                <img src="/logo.png" className="w-24 h-24 object-contain" />
                 <div>
                   <h1 className="text-xs font-black uppercase tracking-[0.3em] text-indigo-500 mb-1">Curimba</h1>
                   <h2 className="text-xl font-black uppercase italic tracking-tighter text-white">Digital</h2>
@@ -89,7 +89,7 @@ export default function Home() {
               <div className="flex gap-2">
                 {/* BOTÃO RESTAURADO */}
                 <button onClick={() => setMostrarExtra(true)} className="bg-white/5 border border-white/10 px-4 py-3 rounded-2xl text-[9px] font-black uppercase text-slate-400 hover:text-white transition-all">Sugerir Melhoria</button>
-                <button onClick={() => setMostrarSugestao(true)} className="bg-indigo-600 px-5 py-3 rounded-2xl text-[9px] font-black uppercase text-white shadow-lg shadow-indigo-600/20">Novo +</button>
+                <button onClick={() => setMostrarSugestao(true)} className="bg-indigo-600 px-5 py-3 rounded-2xl text-[9px] font-black uppercase text-white shadow-lg shadow-indigo-600/20">Novo Ponto</button>
               </div>
             </div>
             <div className="flex gap-2 h-12">
@@ -193,7 +193,7 @@ export default function Home() {
       {mostrarSugestao && (
         <div className="fixed inset-0 z-[100] bg-black/95 backdrop-blur-md flex items-center justify-center p-4">
           <form onSubmit={enviarSugestao} className="bg-[#0B1120] border border-white/10 rounded-[2.5rem] w-full max-w-md p-8 shadow-3xl flex flex-col gap-5">
-            <div className="flex justify-between items-center"><h2 className="text-lg font-black uppercase italic text-white tracking-tighter">Colaborar</h2><button type="button" onClick={() => setMostrarSugestao(false)} className="text-slate-500 text-2xl">✕</button></div>
+            <div className="flex justify-between items-center"><h2 className="text-lg font-black uppercase italic text-white tracking-tighter">Novo Ponto</h2><button type="button" onClick={() => setMostrarSugestao(false)} className="text-slate-500 text-2xl">✕</button></div>
             <input required placeholder="Título" value={novaSugestao.titulo} onChange={e => setNovaSugestao({...novaSugestao, titulo: e.target.value})} className="w-full bg-white/5 border border-white/10 p-4 rounded-xl text-white outline-none focus:border-indigo-500/50" />
             <select required value={novaSugestao.linha} onChange={e => setNovaSugestao({...novaSugestao, linha: e.target.value})} className="w-full bg-white/5 border border-white/10 p-4 rounded-xl text-white text-[10px] font-black uppercase">
               <option value="">Qual a Linha?</option>
