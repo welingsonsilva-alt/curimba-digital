@@ -80,7 +80,7 @@ export default function Home() {
          <div className="max-w-3xl mx-auto space-y-6">
             <div className="flex justify-between items-center">
               <div className="flex items-center gap-4">
-                <img src="/logo.png" className="w-24 h-24 object-contain" />
+                <img src="/logo.png" className="w-26 h-26 object-contain" />
                 <div>
                   <h1 className="text-xs font-black uppercase tracking-[0.3em] text-indigo-500 mb-1">Curimba</h1>
                   <h2 className="text-xl font-black uppercase italic tracking-tighter text-white">Digital</h2>
