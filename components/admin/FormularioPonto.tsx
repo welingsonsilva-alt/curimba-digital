@@ -6,6 +6,8 @@ export default function FormularioPonto({ pontoInicial, onClose }: { pontoInicia
   const [loading, setLoading] = useState(false);
   const [linhas, setLinhas] = useState<any[]>([]);
   
+  // CRUCIAL: Identifica se é uma sugestão (vem da tabela sugestoes_pontos)
+  // ou se é um ponto que já existe na biblioteca oficial (pontos)
   const isSugestao = !!(pontoInicial?.criado_em || pontoInicial?.created_at);
 
   const [dados, setDados] = useState({
@@ -18,75 +20,86 @@ export default function FormularioPonto({ pontoInicial, onClose }: { pontoInicia
   });
 
   useEffect(() => {
+    async function carregarLinhas() {
+      const { data } = await supabase.from("linhas_trabalho").select("*").order("nome");
+      if (data) setLinhas(data);
+    }
     carregarLinhas();
   }, []);
 
-  async function carregarLinhas() {
-    const { data } = await supabase.from("linhas_trabalho").select("*").order("nome");
-    if (data) setLinhas(data);
-  }
-
   async function salvarPonto(e: React.FormEvent) {
     e.preventDefault();
+    if (loading) return; // Evita cliques duplos
     setLoading(true);
 
     try {
-      // 1. Buscamos o objeto da linha para pegar o UUID real
-      const linhaEncontrada = linhas.find(l => l.nome === dados.linha);
+      const linhaObjeto = linhas.find(l => l.nome === dados.linha);
       
-      // 2. CORREÇÃO AQUI: Garantimos que se não achar o ID, passe null (sem aspas)
-      const idLinhaReal = linhaEncontrada?.id || null;
-
-      const corpoRequisicao = {
+      // Montamos o objeto SEM o ID para não confundir o Supabase no Insert
+      const corpoRequisicao: any = {
         titulo: dados.titulo.trim(),
         linha: dados.linha,
         letra: dados.letra.trim(),
-        id_linha: idLinhaReal, // <--- Aqui estava o erro ("null" vs null)
+        id_linha: linhaObjeto?.id || null,
         link_youtube: dados.link_youtube?.trim() || null,
         link_spotify: dados.link_spotify?.trim() || null,
         aprovado: true
       };
 
       if (!isSugestao && dados.id) {
-        // UPDATE
-        const { error } = await supabase.from("pontos").update(corpoRequisicao).eq("id", dados.id);
-        if (error) throw error;
-      } else {
-        // INSERT
-        const { error: insError } = await supabase.from("pontos").insert([corpoRequisicao]);
-        if (insError) throw insError;
+        // --- MODO EDIÇÃO (UPDATE) ---
+        console.log("Atualizando ponto existente...");
+        const { error: updateError } = await supabase
+          .from("pontos")
+          .update(corpoRequisicao)
+          .eq("id", dados.id);
         
+        if (updateError) throw updateError;
+      } else {
+        // --- MODO APROVAÇÃO (INSERT) ---
+        console.log("Criando novo ponto oficial a partir de sugestão...");
+        
+        // 1. Criamos o ponto oficial
+        const { error: insertError } = await supabase
+          .from("pontos")
+          .insert([corpoRequisicao]);
+        
+        if (insertError) throw insertError;
+
+        // 2. Se era uma sugestão, deletamos ela para não aparecer mais no painel
         if (pontoInicial?.id) {
-          await supabase.from("sugestoes_pontos").delete().eq("id", pontoInicial.id);
+          await supabase
+            .from("sugestoes_pontos")
+            .delete()
+            .eq("id", pontoInicial.id);
         }
       }
 
-      alert("✨ Ponto salvo com sucesso!");
+      alert("✨ Gravado com sucesso!");
       onClose();
       window.location.reload();
 
     } catch (err: any) {
-      console.error("Erro no Supabase:", err);
+      console.error("Erro crítico:", err);
       alert("Erro ao salvar: " + err.message);
     } finally {
       setLoading(false);
     }
   }
 
-  // ... (mantenha o restante do código do return igual ao anterior)
   return (
     <div className="fixed inset-0 z-[200] flex items-center justify-center p-4 bg-black/95 backdrop-blur-md overflow-y-auto">
       <div className="bg-[#0B1120] border border-white/10 rounded-[40px] p-8 w-full max-w-3xl shadow-3xl my-auto">
         <div className="flex justify-between items-center mb-8 pb-4 border-b border-white/5">
           <h2 className="text-xl font-black text-white uppercase italic tracking-tighter">
-            {dados.id && !isSugestao ? "Editar Registro" : "Novo Fundamento"}
+            {isSugestao ? "Aprovar Sugestão" : "Editar Fundamento"}
           </h2>
           <button onClick={onClose} className="text-slate-500 hover:text-white text-2xl">✕</button>
         </div>
         
         <form onSubmit={salvarPonto} className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <div className="space-y-5">
-            <input required placeholder="Título" value={dados.titulo} onChange={e => setDados({...dados, titulo: e.target.value})} className="w-full bg-slate-950 border border-white/5 p-4 rounded-2xl text-white outline-none focus:border-indigo-500/50" />
+            <input required placeholder="Título" value={dados.titulo} onChange={e => setDados({...dados, titulo: e.target.value})} className="w-full bg-slate-950 border border-white/5 p-4 rounded-2xl text-white outline-none" />
             
             <select required value={dados.linha} onChange={e => setDados({...dados, linha: e.target.value})} className="w-full bg-slate-950 border border-white/5 p-4 rounded-2xl text-white outline-none">
               <option value="">Selecione a Linha...</option>
@@ -102,7 +115,7 @@ export default function FormularioPonto({ pontoInicial, onClose }: { pontoInicia
           <div className="md:col-span-2 flex justify-end gap-4 mt-4 pt-6 border-t border-white/5">
             <button type="button" onClick={onClose} className="px-6 py-4 text-slate-500 font-black uppercase text-[10px]">Cancelar</button>
             <button type="submit" disabled={loading} className="bg-indigo-600 hover:bg-indigo-500 px-10 py-4 rounded-2xl text-white font-black uppercase text-[11px] shadow-indigo-600/20">
-              {loading ? "Gravando..." : "Salvar Agora"}
+              {loading ? "Gravando..." : "Salvar Alterações"}
             </button>
           </div>
         </form>
