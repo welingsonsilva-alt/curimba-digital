@@ -12,7 +12,6 @@ export default function ListaPontos() {
   useEffect(() => {
     const buscar = async () => {
       setLoading(true);
-      // Selecionando explicitamente todas as colunas necessárias
       const { data, error } = await supabase
         .from("pontos")
         .select("id, titulo, linha, letra, link_youtube, link_spotify, aprovado")
@@ -20,9 +19,8 @@ export default function ListaPontos() {
         .order("titulo", { ascending: true });
       
       if (error) {
-        console.error("Erro ao buscar pontos:", error.message);
+        console.error("Erro Supabase:", error.message);
       } else {
-        console.log("Pontos carregados com sucesso:", data);
         setPontos(data || []);
       }
       setLoading(false);
@@ -50,17 +48,17 @@ export default function ListaPontos() {
         </Link>
       </div>
 
-      {/* BUSCA */}
+      {/* CAMPO DE PESQUISA */}
       <input 
         className="w-full p-5 rounded-2xl shadow-sm mb-8 border-2 border-indigo-100 outline-none focus:border-indigo-400 transition-all bg-white text-gray-700" 
         placeholder="Pesquisar ponto ou linha..." 
         onChange={e => setBusca(e.target.value)}
       />
 
-      {/* LISTAGEM */}
+      {/* LISTAGEM DE PONTOS */}
       <div className="space-y-4">
         {loading ? (
-          <p className="text-center text-slate-400 animate-pulse font-bold uppercase text-xs tracking-widest">Carregando Biblioteca...</p>
+          <p className="text-center text-slate-400 animate-pulse font-bold uppercase text-xs py-10">Carregando Biblioteca...</p>
         ) : filtrados.length === 0 ? (
           <p className="text-center text-slate-400 py-10 font-medium">Nenhum ponto encontrado.</p>
         ) : (
@@ -77,44 +75,41 @@ export default function ListaPontos() {
               </summary>
               
               <div className="p-6 pt-0 border-t border-slate-50">
-                {/* ÁREA DE BOTÕES DE MÍDIA */}
+                
+                {/* BOTÕES DE MÍDIA CLICÁVEIS */}
                 <div className="py-6 flex flex-wrap gap-3">
                   
-                  {/* DEBUG VISUAL: Remova estas linhas após confirmar que funciona */}
-                  {(!p.link_youtube && !p.link_spotify) && (
-                    <p className="text-[10px] text-slate-300 italic font-medium w-full text-center border border-dashed border-slate-100 py-2 rounded-lg">
-                      Sem links de áudio/vídeo cadastrados.
-                    </p>
-                  )}
-
-                  {/* BOTÃO YOUTUBE */}
+                  {/* BOTÃO YOUTUBE CLICÁVEL */}
                   {p.link_youtube && (
                     <a 
                       href={p.link_youtube} 
                       target="_blank" 
                       rel="noopener noreferrer"
-                      className="flex-1 min-w-[140px] flex items-center justify-center gap-3 bg-[#FF0000] text-white px-4 py-4 rounded-2xl text-[10px] font-black uppercase tracking-widest hover:scale-[1.02] active:scale-95 transition-all shadow-xl shadow-red-600/20"
+                      className="flex-1 min-w-[140px] flex items-center justify-center gap-3 bg-[#FF0000] text-white px-4 py-4 rounded-2xl text-[10px] font-black uppercase tracking-widest hover:brightness-110 active:scale-95 transition-all shadow-md"
                     >
-                      <span className="text-sm">📺</span> YouTube
+                      <span className="text-sm">📺</span> Abrir YouTube
                     </a>
                   )}
                   
-                  {/* BOTÃO SPOTIFY */}
+                  {/* BOTÃO SPOTIFY CLICÁVEL */}
                   {p.link_spotify && (
                     <a 
                       href={p.link_spotify} 
                       target="_blank" 
                       rel="noopener noreferrer"
-                      className="flex-1 min-w-[140px] flex items-center justify-center gap-3 bg-[#1DB954] text-white px-4 py-4 rounded-2xl text-[10px] font-black uppercase tracking-widest hover:scale-[1.02] active:scale-95 transition-all shadow-xl shadow-green-600/20"
+                      className="flex-1 min-w-[140px] flex items-center justify-center gap-3 bg-[#1DB954] text-white px-4 py-4 rounded-2xl text-[10px] font-black uppercase tracking-widest hover:brightness-110 active:scale-95 transition-all shadow-md"
                     >
-                      <span className="text-sm">🎧</span> Spotify
+                      <span className="text-sm">🎧</span> Abrir Spotify
                     </a>
+                  )}
+
+                  {!p.link_youtube && !p.link_spotify && (
+                    <p className="text-[10px] text-slate-300 italic w-full text-center py-2">Sem links disponíveis.</p>
                   )}
                 </div>
 
                 {/* LETRA DO PONTO */}
                 <div className="relative">
-                  <div className="absolute top-4 right-6 text-[10px] font-bold text-slate-300 uppercase tracking-widest">Letra</div>
                   <pre 
                     translate="no" 
                     className="notranslate text-gray-700 italic font-serif leading-relaxed whitespace-pre-wrap text-lg bg-slate-50/50 p-8 rounded-[32px] border border-slate-100"
