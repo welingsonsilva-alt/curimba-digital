@@ -1,9 +1,4 @@
-﻿# 1. Navega para a pasta
-cd "C:\Users\casa\Desktop\pontos_umbanda"
-
-# 2. Sobrescreve o arquivo com a versão final e funcional
-$finalCode = @"
-"use client";
+﻿"use client";
 import { useEffect, useState } from "react";
 import { supabase } from "@/lib/supabase";
 
@@ -174,7 +169,3 @@ export default function Home() {
     </div>
   );
 }
-"@
-
-Set-Content -Path "app/page.tsx" -Value $finalCode -Encoding UTF8
-Write-Host "✅ Codigo completo e funcional aplicado!" -ForegroundColor Green
