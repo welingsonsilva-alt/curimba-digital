@@ -13,37 +13,6 @@ export default function Home() {
   const [extraMsg, setExtraMsg] = useState("");
   const [novaSugestao, setNovaSugestao] = useState({ titulo: "", linha: "", letra: "", link_spotify: "" });
   const [enviando, setEnviando] = useState(false);
-  const enviarExtra = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setEnviando(true);
-    const { error } = await supabase.from("sugestoes_extras").insert([{ mensagem: extraMsg }]);
-    if (!error) {
-      alert("Saravá! Sugestão enviada.");
-      setExtraMsg("");
-      setMostrarExtra(false);
-    }
-    setEnviando(false);
-  };
-
-  const enviarSugestao = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setEnviando(true);
-    const { error } = await supabase.from("sugestoes_pontos").insert([novaSugestao]);
-    if (!error) {
-      alert("Ponto enviado para análise!");
-      setNovaSugestao({ titulo: "", linha: "", letra: "", link_spotify: "" });
-      setMostrarSugestao(false);
-    }
-    setEnviando(false);
-  };
-
-  const enviarExtra = async (e: any) => {
-    e.preventDefault();
-    setEnviando(true);
-    const { error } = await supabase.from('sugestoes_extras').insert([{ mensagem: extraMsg }]);
-    if (!error) { alert('Saravá! Sugestão enviada.'); setExtraMsg(''); setMostrarExtra(false); }
-    setEnviando(false);
-  };
 
   useEffect(() => {
     async function inicializar() {
@@ -173,5 +142,3 @@ export default function Home() {
     </div>
   );
 }
-
-
