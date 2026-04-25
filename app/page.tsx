@@ -14,6 +14,14 @@ export default function Home() {
   const [novaSugestao, setNovaSugestao] = useState({ titulo: "", linha: "", letra: "", link_spotify: "" });
   const [enviando, setEnviando] = useState(false);
 
+  const enviarExtra = async (e: any) => {
+    e.preventDefault();
+    setEnviando(true);
+    const { error } = await supabase.from('sugestoes_extras').insert([{ mensagem: extraMsg }]);
+    if (!error) { alert('Saravá! Sugestão enviada.'); setExtraMsg(''); setMostrarExtra(false); }
+    setEnviando(false);
+  };
+
   useEffect(() => {
     async function inicializar() {
       const { data: pts } = await supabase.from("pontos").select("*").eq("aprovado", true).order("titulo");
@@ -142,3 +150,4 @@ export default function Home() {
     </div>
   );
 }
+
